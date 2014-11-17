@@ -9,7 +9,6 @@ void
 init_parallel(int argc, char* argv[])
 {
     parallel.err = MPI_Init(&argc, &argv);
-    parallel.start_time = MPI_Wtime();
     parallel.err = MPI_Comm_size(MPI_COMM_WORLD, &parallel.nodes);
     parallel.err = MPI_Comm_rank(MPI_COMM_WORLD, &parallel.rank);
 
@@ -75,7 +74,7 @@ parallel_pearson(double* return_value)
 }
 
 void 
-broadcast_parallel_mean(double sum_a, double sum_b)
+    broadcast_parallel_mean(double sum_a, double sum_b)
 {
     // Sending both means to other processes
     if (parallel.rank == ROOT_PROC)

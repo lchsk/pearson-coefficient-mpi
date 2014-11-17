@@ -16,6 +16,8 @@ main (int argc, char* argv[])
     load_data(argc, argv);
     start_serial_pearson();
 
+    parallel.err = MPI_Barrier(MPI_COMM_WORLD);
+    parallel.start_time = MPI_Wtime();
     double sum_a, sum_b;
 
     parallel_mean(input_data.a, &sum_a);

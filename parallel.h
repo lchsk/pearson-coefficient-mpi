@@ -28,8 +28,17 @@ parallel_t{
 
 parallel_t parallel;
 
+// Version with scattering whole array
 double parallel_mean(double* p_array, double* return_value);
+
+// Version with computing start position of an index
+double parallel_mean2(double* p_array, double* return_value);
+
 double parallel_stddev(double* p_array, double* return_value);
+
+double parallel_stddev2(double* p_array, double* return_value);
+
+
 double parallel_pearson(double* return_value);
 void init_parallel(int argc, char* argv[]);
 

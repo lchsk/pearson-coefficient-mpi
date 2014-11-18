@@ -12,6 +12,9 @@ init_parallel(int argc, char* argv[])
     parallel.err = MPI_Comm_size(MPI_COMM_WORLD, &parallel.nodes);
     parallel.err = MPI_Comm_rank(MPI_COMM_WORLD, &parallel.rank);
 
+    if (parallel.rank == ROOT_PROC)
+        printf("\tWorld size: %d\n", parallel.nodes);
+
     parallel.per_node = INPUT_LENGTH / parallel.nodes;
 }
 
@@ -34,6 +37,26 @@ parallel_mean(double* p_array, double* return_value)
 }
 
 double 
+parallel_mean2(double* p_array, double* return_value)
+{
+    double* buf = (double*) malloc(parallel.nodes * sizeof(double));
+    double tmp[parallel.nodes];
+    parallel.err = MPI_Scatter(tmp, 1, MPI_DOUBLE, /* send buffer */
+                            buf, 1, MPI_DOUBLE, /* receive buffer */
+                            ROOT_PROC, MPI_COMM_WORLD);
+
+    double total = 0;
+    int i;
+    int idx = parallel.per_node * parallel.rank;
+    for (i = 0; i < parallel.per_node; ++i, ++idx)
+    {
+        total = total + p_array[idx];
+    }
+
+    parallel.err = MPI_Reduce(&total, return_value, 1, MPI_DOUBLE, MPI_SUM, ROOT_PROC, MPI_COMM_WORLD);
+}
+
+double 
 parallel_stddev(double* p_array, double* return_value)
 {
     double* buf = (double*) malloc(parallel.per_node * sizeof(double));
@@ -47,6 +70,26 @@ parallel_stddev(double* p_array, double* return_value)
     for (i; i < parallel.per_node; ++i)
     {
         nominator += pow((buf[i] - parallel.mean_x), 2.0);
+    }
+
+    parallel.err = MPI_Reduce(&nominator, return_value, 1, MPI_DOUBLE, MPI_SUM, ROOT_PROC, MPI_COMM_WORLD);
+}
+
+double 
+parallel_stddev2(double* p_array, double* return_value)
+{
+    double* buf = (double*) malloc(parallel.nodes * sizeof(double));
+    double tmp[parallel.nodes];
+    parallel.err = MPI_Scatter(tmp, 1, MPI_DOUBLE, /* send buffer */
+                            buf, 1, MPI_DOUBLE, /* receive buffer */
+                            ROOT_PROC, MPI_COMM_WORLD);
+
+    double nominator = 0;
+    int idx = parallel.per_node * parallel.rank;
+    int i = 0;
+    for (i; i < parallel.per_node; ++i, ++idx)
+    {
+        nominator += pow((p_array[idx] - parallel.mean_x), 2.0);
     }
 
     parallel.err = MPI_Reduce(&nominator, return_value, 1, MPI_DOUBLE, MPI_SUM, ROOT_PROC, MPI_COMM_WORLD);
@@ -74,7 +117,7 @@ parallel_pearson(double* return_value)
 }
 
 void 
-    broadcast_parallel_mean(double sum_a, double sum_b)
+broadcast_parallel_mean(double sum_a, double sum_b)
 {
     // Sending both means to other processes
     if (parallel.rank == ROOT_PROC)
@@ -102,6 +145,8 @@ void
         parallel.err = MPI_Recv(&r, 1, MPI_DOUBLE, MPI_ANY_SOURCE, TAG_SET_B, MPI_COMM_WORLD, &s);
         parallel.mean_y = r; 
     }
+
+
 }
 
 void 

@@ -19,6 +19,9 @@ init_arrays()
 double 
 compute_mean(double* p_array, int p_len)
 {
+    clock_t start, end;
+
+    start = clock();
     double sum = 0;
 
     int i = 0;
@@ -27,12 +30,22 @@ compute_mean(double* p_array, int p_len)
         sum = sum + p_array[i];
     }
 
+    end = clock();
+
+    double diff = (((double)end - (double)start) / CLOCKS_PER_SEC) * 1000;
+
+    printf("\tSerial mean computed in %*.*f ms\n\n", RESULT_LENGTH, FLOAT_PRECISION, diff);
+
+
     return sum / p_len;
 }
 
 double 
 compute_std_dev(double* p_array, double p_mean, int p_len)
 {
+    clock_t start, end;
+
+    start = clock();
     double nominator = 0;
 
     int i = 0;
@@ -41,6 +54,13 @@ compute_std_dev(double* p_array, double p_mean, int p_len)
         nominator += pow((p_array[i] - p_mean), 2.0);
 
     }
+
+    end = clock();
+
+    double diff = (((double)end - (double)start) / CLOCKS_PER_SEC) * 1000;
+
+    printf("\tSerial stddev computed in %*.*f ms\n\n", RESULT_LENGTH, FLOAT_PRECISION, diff);
+
 
     return sqrt(nominator / p_len);
 }
@@ -56,12 +76,23 @@ compute_pearson(
     int p_len
     )
 {
+    clock_t start, end;
+
+    start = clock();
+
     int i = 0;
     double sum = 0;
     for (i; i < p_len; ++i)
     {
         sum += ((p_array_a[i] - p_mean_a) * (p_array_b[i] - p_mean_b));
     }
+
+    end = clock();
+
+    double diff = (((double)end - (double)start) / CLOCKS_PER_SEC) * 1000;
+
+    printf("\tSerial pearson coefficient computed in %*.*f ms\n\n", RESULT_LENGTH, FLOAT_PRECISION, diff);
+
 
     return (sum / p_len) / (p_std_dev_a * p_std_dev_b);
 }
@@ -105,9 +136,7 @@ void
 start_serial_pearson()
 {
     if (parallel.rank == ROOT_PROC)
-    {
-        printf("Run ./pearson -h for usage information\n\n");
-        
+    {   
         parallel.serial_time = run_serial_pearson();
 
         printf("\tParallel algorithm now running...\n");
